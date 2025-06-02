@@ -36,6 +36,12 @@
 
     const params = new URLSearchParams(window.location.search);
     const data = Object.fromEntries(params.entries());
+    const playerId = data.playerId; // Required to update existing doc
+
+    if (!playerId) {
+      alert("Missing playerId in URL. Cannot update Firebase.");
+    }
+
     const introDiv = document.getElementById("intro");
     const tableBody = document.getElementById("playerDetails");
     const conclusionDiv = document.getElementById("conclusion");
@@ -91,20 +97,20 @@
     updateBtn.addEventListener("click", async () => {
       const inputs = document.querySelectorAll("input");
       inputs.forEach(input => {
-        data[input.name] = input.value;
+        data[input.name] = input.value.trim();
       });
       renderTable(false);
       renderIntroConclusion();
       updateBtn.classList.add("d-none");
 
       try {
-        await db.collection("transfermarktApplications").add({
+        await db.collection("transfermarktApplications").doc(playerId).update({
           ...data,
-          timestamp: new Date()
+          updatedAt: new Date()
         });
-        alert("Player profile successfully updated in Firebase.");
+        alert("Player data successfully updated in Firebase.");
       } catch (err) {
-        alert("Error updating data: " + err.message);
+        alert("Error updating document: " + err.message);
       }
     });
 
