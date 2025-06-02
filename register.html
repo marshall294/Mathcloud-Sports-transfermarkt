@@ -1,0 +1,120 @@
+<!-- register.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Transfermarkt Player Registration</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+  <header class="bg-dark text-white py-3 mb-4">
+    <div class="container text-center">
+      <h1 class="h3 m-0">Mathcloud Sports</h1>
+    </div>
+  </header>
+
+  <div class="container py-5">
+    <h2 class="text-center mb-4 fw-bold text-primary">Submit Your Player Profile for Transfermarkt Registration</h2>
+    <form id="playerForm" class="card p-4 shadow">
+      <div class="mb-3">
+        <label class="form-label">Full Name</label>
+        <input type="text" class="form-control" name="name" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Date of Birth</label>
+        <input type="date" class="form-control" name="dob" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Nationality</label>
+        <input type="text" class="form-control" name="nationality" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Position</label>
+        <input type="text" class="form-control" name="position" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Preferred Foot</label>
+        <select class="form-select" name="foot" required>
+          <option value="">Select Foot</option>
+          <option>Right</option>
+          <option>Left</option>
+          <option>Both</option>
+        </select>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Current Club</label>
+        <input type="text" class="form-control" name="club" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Player Height (e.g., 1.80m)</label>
+        <input type="text" class="form-control" name="height">
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Player Weight (e.g., 75kg)</label>
+        <input type="text" class="form-control" name="weight">
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Supporting Links (Club Website, Articles, etc.)</label>
+        <textarea class="form-control" name="links" rows="2"></textarea>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Additional Comments</label>
+        <textarea class="form-control" name="comments" rows="2"></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary w-100">Submit</button>
+    </form>
+
+    <div class="alert alert-info mt-4" role="alert">
+      <strong>Note:</strong> Please make sure to include all articles and supporting links from credible publications—such as Transfermarkt, Wikipedia, newspapers, or your club’s official website—that validate your claims. <br>
+      Your application will only be processed after payment confirmation. <br>
+      For more information, contact us via WhatsApp: <strong>+2348102341648</strong>.
+    </div>
+  </div>
+
+  <footer class="bg-dark text-white text-center py-3 mt-5">
+    <div class="container">
+      &copy; 2025 Mathcloud Sports. All rights reserved.
+    </div>
+  </footer>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCWD0IVYLfJlHbvzFORG-yoNieLY6LLJ1k",
+      authDomain: "soccer-768a2.firebaseapp.com",
+      projectId: "soccer-768a2",
+      storageBucket: "soccer-768a2.appspot.com",
+      messagingSenderId: "167448274735",
+      appId: "1:167448274735:web:3c097133b333c5089a63da"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    document.getElementById("playerForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+      const form = e.target;
+      const data = {
+        name: form.name.value,
+        dob: form.dob.value,
+        nationality: form.nationality.value,
+        position: form.position.value,
+        foot: form.foot.value,
+        club: form.club.value,
+        height: form.height.value,
+        weight: form.weight.value,
+        links: form.links.value,
+        comments: form.comments.value,
+        timestamp: new Date()
+      };
+      db.collection("transfermarktApplications").add(data).then(() => {
+        alert("Application submitted successfully!");
+        form.reset();
+      }).catch(err => {
+        alert("Error: " + err.message);
+      });
+    });
+  </script>
+</body>
+</html>

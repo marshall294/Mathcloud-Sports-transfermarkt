@@ -1,0 +1,109 @@
+<!-- admin-register.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - Transfermarkt Applications</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-white">
+  <div class="container py-5">
+    <h2 class="text-center mb-4">Submitted Player Applications</h2>
+    <div id="applications" class="table-responsive">
+      <table class="table table-striped">
+        <thead class="table-dark">
+          <tr>
+            <th>Name</th>
+            <th>DOB</th>
+            <th>Nationality</th>
+            <th>Position</th>
+            <th>Foot</th>
+            <th>Club</th>
+            <th>Height</th>
+            <th>Weight</th>
+            <th>Links</th>
+            <th>Comments</th>
+            <th>Submitted</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="applicationTable">
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://cdn.emailjs.com/dist/email.min.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCWD0IVYLfJlHbvzFORG-yoNieLY6LLJ1k",
+      authDomain: "soccer-768a2.firebaseapp.com",
+      projectId: "soccer-768a2",
+      storageBucket: "soccer-768a2.appspot.com",
+      messagingSenderId: "167448274735",
+      appId: "1:167448274735:web:3c097133b333c5089a63da"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    emailjs.init("user_emailjs_public_key_here"); // Replace with your EmailJS public key
+
+    const tableBody = document.getElementById("applicationTable");
+
+    db.collection("transfermarktApplications").orderBy("timestamp", "desc").onSnapshot(snapshot => {
+      tableBody.innerHTML = "";
+      snapshot.forEach(doc => {
+        const d = doc.data();
+        const docId = doc.id;
+
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${d.name}</td>
+          <td>${d.dob}</td>
+          <td>${d.nationality}</td>
+          <td>${d.position}</td>
+          <td>${d.foot}</td>
+          <td>${d.club}</td>
+          <td>${d.height || ''}</td>
+          <td>${d.weight || ''}</td>
+          <td><a href="${d.links}" target="_blank">Link</a></td>
+          <td>${d.comments || ''}</td>
+          <td>${d.timestamp.toDate().toLocaleString()}</td>
+          <td><button class="btn btn-sm btn-primary" onclick='sendEmailNotification(${JSON.stringify(d)})'>Send Email</button></td>
+        `;
+        tableBody.appendChild(row);
+      });
+    });
+
+    function sendEmailNotification(data) {
+      const emailContent = `
+        <strong>New Transfermarkt Player Registration</strong><br><br>
+        <strong>Name:</strong> ${data.name}<br>
+        <strong>Date of Birth:</strong> ${data.dob}<br>
+        <strong>Nationality:</strong> ${data.nationality}<br>
+        <strong>Position:</strong> ${data.position}<br>
+        <strong>Preferred Foot:</strong> ${data.foot}<br>
+        <strong>Current Club:</strong> ${data.club}<br>
+        <strong>Height:</strong> ${data.height || 'N/A'}<br>
+        <strong>Weight:</strong> ${data.weight || 'N/A'}<br>
+        <strong>Video/Profile Link:</strong> <a href="${data.links}" target="_blank">${data.links}</a><br>
+        <strong>Additional Comments:</strong> ${data.comments || 'None'}<br>
+      `;
+
+      emailjs.send("service_transfermarkt", "template_register", {
+        to_email: "agent@transfermarkt.com",
+        subject: "New Player Submission - Transfermarkt",
+        html_message: emailContent
+      }).then(() => {
+        alert("Email sent successfully");
+      }).catch(error => {
+        alert("Email sending failed");
+        console.error("Email sending failed", error);
+      });
+    }
+  </script>
+</body>
+</html>
