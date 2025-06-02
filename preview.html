@@ -13,8 +13,8 @@
     <table class="table table-bordered">
       <tbody id="playerDetails"></tbody>
     </table>
-    <div class="d-flex justify-content-center gap-3">
-      <button id="editBtn" class="btn btn-warning">Edit</button>
+    <div class="d-flex justify-content-center gap-3 mb-4">
+      <button id="editBtn" class="btn btn-warning d-none">Edit</button>
       <button id="updateBtn" class="btn btn-success d-none">Update to Firebase</button>
     </div>
     <div id="conclusion" class="mt-4"></div>
@@ -23,6 +23,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script>
+    // Firebase configuration
     const firebaseConfig = {
       apiKey: "AIzaSyCWD0IVYLfJlHbvzFORG-yoNieLY6LLJ1k",
       authDomain: "soccer-768a2.firebaseapp.com",
@@ -34,14 +35,7 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    const params = new URLSearchParams(window.location.search);
-    const data = Object.fromEntries(params.entries());
-    const playerId = data.playerId; // Required to update existing doc
-
-    if (!playerId) {
-      alert("Missing playerId in URL. Cannot update Firebase.");
-    }
-
+    // HTML elements
     const introDiv = document.getElementById("intro");
     const tableBody = document.getElementById("playerDetails");
     const conclusionDiv = document.getElementById("conclusion");
@@ -61,27 +55,64 @@
       ["Comments", "comments"]
     ];
 
-    function renderTable(editable = false) {
-      tableBody.innerHTML = "";
-      fields.forEach(([label, key]) => {
-        const value = data[key] || "";
-        const row = document.createElement("tr");
-        const cell = editable
-          ? `<input class="form-control" type="text" name="${key}" value="${value}">`
-          : (key === "links" && value)
-            ? `<a href="${value}" target="_blank">${value}</a>`
-            : value || "N/A";
-        row.innerHTML = `<th>${label}</th><td>${cell}</td>`;
-        tableBody.appendChild(row);
-      });
+    const params = new URLSearchParams(window.location.search);
+    const playerId = params.get("playerId");
+    let playerData = {};
+
+    if (!playerId) {
+      alert("Missing playerId in URL.");
+    } else {
+      loadPlayerData();
     }
 
-    function renderIntroConclusion() {
+    async function loadPlayerData() {
+      try {
+        const docRef = db.collection("transfermarktApplications").doc(playerId);
+        const doc = await docRef.get();
+        if (!doc.exists) {
+          alert("Player not found in database.");
+          return;
+        }
+
+        playerData = doc.data();
+        renderAll(playerData);
+        editBtn.classList.remove("d-none");
+      } catch (error) {
+        alert("Error loading player: " + error.message);
+      }
+    }
+
+    function renderAll(data, editable = false) {
+      renderIntro(data);
+      renderTable(data, editable);
+      renderConclusion(data);
+    }
+
+    function renderIntro(data) {
       introDiv.innerHTML = `
         <p>Dear Transfermarkt Team,</p>
         <p>My name is <strong>Marshall Jacob</strong>, and I am pleased to present the official application of a highly promising player for your esteemed consideration. This submission reflects the player's notable talent, strong potential, and commitment to excellence on and off the pitch.</p>
         <p><strong>${data.name}</strong>, born on ${data.dob}, is a ${data.nationality} national currently playing for ${data.club}. Operating primarily as a ${data.position}, ${data.name} has demonstrated exceptional ability and awareness in competitive matches, exhibiting versatility with a preferred ${data.foot} foot.</p>
       `;
+    }
+
+    function renderTable(data, editable = false) {
+      tableBody.innerHTML = "";
+      fields.forEach(([label, key]) => {
+        const value = data[key] || "";
+        const cell = editable
+          ? `<input class="form-control" name="${key}" value="${value}">`
+          : (key === "links" && value)
+            ? `<a href="${value}" target="_blank">${value}</a>`
+            : value || "N/A";
+
+        const row = document.createElement("tr");
+        row.innerHTML = `<th>${label}</th><td>${cell}</td>`;
+        tableBody.appendChild(row);
+      });
+    }
+
+    function renderConclusion(data) {
       conclusionDiv.innerHTML = `
         <p>I strongly believe that ${data.name} possesses the technical skill set, tactical intelligence, and professional mindset needed to thrive in a competitive environment such as yours. It is with great confidence and full endorsement that I submit this player's details for your kind review.</p>
         <p>Should you require any further information or supporting documentation, please do not hesitate to contact me.</p>
@@ -90,32 +121,28 @@
     }
 
     editBtn.addEventListener("click", () => {
-      renderTable(true);
+      renderTable(playerData, true);
       updateBtn.classList.remove("d-none");
     });
 
     updateBtn.addEventListener("click", async () => {
       const inputs = document.querySelectorAll("input");
       inputs.forEach(input => {
-        data[input.name] = input.value.trim();
+        playerData[input.name] = input.value.trim();
       });
-      renderTable(false);
-      renderIntroConclusion();
-      updateBtn.classList.add("d-none");
 
       try {
         await db.collection("transfermarktApplications").doc(playerId).update({
-          ...data,
+          ...playerData,
           updatedAt: new Date()
         });
-        alert("Player data successfully updated in Firebase.");
+        alert("Player updated successfully.");
+        renderAll(playerData);
+        updateBtn.classList.add("d-none");
       } catch (err) {
-        alert("Error updating document: " + err.message);
+        alert("Error updating player: " + err.message);
       }
     });
-
-    renderIntroConclusion();
-    renderTable();
   </script>
 </body>
 </html>
