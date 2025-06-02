@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Admin - Transfermarkt Applications</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
 </head>
 <body class="bg-white">
   <div class="container py-5">
@@ -46,6 +46,7 @@
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
+
     emailjs.init("HvxbZfh4f8c1r_U2Z");
 
     const tableBody = document.getElementById("applicationTable");
@@ -73,7 +74,8 @@
           <td>${d.timestamp.toDate().toLocaleString()}</td>
           <td>
             <a href="${previewUrl}" class="btn btn-sm btn-secondary" target="_blank">Preview</a>
-            <button class="btn btn-sm btn-primary" onclick='sendEmailNotification(${JSON.stringify(d)})'>Send Email</button>
+            <button class="btn btn-sm btn-primary mb-1" onclick='sendEmailNotification(${JSON.stringify(d)})'>Send Email</button>
+            <button class="btn btn-sm btn-danger" onclick='deleteApplication("${docId}")'>Delete</button>
           </td>
         `;
         tableBody.appendChild(row);
@@ -81,32 +83,34 @@
     });
 
     function sendEmailNotification(data) {
-      const htmlContent = `
-        <p><strong>Marshall Jacob</strong> is submitting the following player for consideration:</p>
-        <table border="1" cellpadding="5" cellspacing="0">
-          <tr><th>Name</th><td>${data.name}</td></tr>
-          <tr><th>Date of Birth</th><td>${data.dob}</td></tr>
-          <tr><th>Nationality</th><td>${data.nationality}</td></tr>
-          <tr><th>Position</th><td>${data.position}</td></tr>
-          <tr><th>Preferred Foot</th><td>${data.foot}</td></tr>
-          <tr><th>Club</th><td>${data.club}</td></tr>
-          <tr><th>Height</th><td>${data.height || 'N/A'}</td></tr>
-          <tr><th>Weight</th><td>${data.weight || 'N/A'}</td></tr>
-          <tr><th>Video/Profile Link</th><td><a href="${data.links}" target="_blank">${data.links}</a></td></tr>
-          <tr><th>Comments</th><td>${data.comments || 'None'}</td></tr>
-        </table>
-      `;
-
       emailjs.send("service_transfermarkt", "template_register", {
-        to_email: "agent@transfermarkt.com",
-        subject: "Official Player Submission - Marshall Jacob",
-        html_message: htmlContent
+        name: data.name || "N/A",
+        dob: data.dob || "N/A",
+        nationality: data.nationality || "N/A",
+        position: data.position || "N/A",
+        foot: data.foot || "N/A",
+        club: data.club || "N/A",
+        height: data.height || "N/A",
+        weight: data.weight || "N/A",
+        links: data.links || "N/A",
+        comments: data.comments || "None"
       }).then(() => {
         alert("Email sent successfully");
       }).catch(error => {
         alert("Email sending failed");
         console.error("Email sending failed", error);
       });
+    }
+
+    function deleteApplication(id) {
+      if (confirm("Are you sure you want to delete this application?")) {
+        db.collection("transfermarktApplications").doc(id).delete()
+          .then(() => alert("Application deleted successfully"))
+          .catch(err => {
+            console.error("Error deleting application:", err);
+            alert("Failed to delete application");
+          });
+      }
     }
   </script>
 </body>
